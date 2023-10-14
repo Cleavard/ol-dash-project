@@ -12,15 +12,10 @@ au_params = {"format" : "csv"}
 uk_dataframe = pd.read_csv(base_uk_url + url_parse.urlencode(uk_params))
 uk_inflation_rates = {}
 
-uk_dataframe[['YEAR', 'QUARTER']] = df['TIME_PERIOD'].str.split('_', n=1)
+uk_dataframe[['YEAR', 'QUARTER']] = uk_dataframe['TIME_PERIOD'].str.split('_', n=1)
 uk_dataframe['YEAR'] = uk_dataframe.['YEAR'],astype('int')
 
-uk_dataframe.set_index(['YEAR', 'QUARTER'], inplace=True)
-uk_dataframe['INTEREST'] = np.na
+uk_dataframe.groupby('QUARTER')['INTEREST'].apply(lambda x: (x - x.shift(1))/x.shift(1))
 
-for index, row in uk_dataframe.iterrows():
-    try:
-        previous_year_ = uk_dataframe.loc[index['YEAR']-1, index['QUARTER']]
 
-    except KeyError:
-        continue
+uk_dataframe.loc[uk_dataframe.groupby('QUARTER')['INTEREST'].iloc[1:].index, 'INTEREST'] = 0
